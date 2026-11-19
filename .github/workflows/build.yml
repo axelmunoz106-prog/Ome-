@@ -1,0 +1,20 @@
+name: build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          xcrun --sdk iphoneos clang++ -target arm64-apple-ios14.0 \
+            -isysroot "$SDK" -fobjc-arc -std=c++20 -O2 -dynamiclib \
+            -undefined dynamic_lookup -framework UIKit -framework QuartzCore \
+            -framework Foundation -o OneStateMenu.dylib OneStateMenu.mm
+          install_name_tool -id @executable_path/OneStateMenu.dylib OneStateMenu.dylib
+          lipo -info OneStateMenu.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneStateMenu
+          path: OneStateMenu.dylib
